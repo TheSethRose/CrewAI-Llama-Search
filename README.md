@@ -1,98 +1,105 @@
 # CrewAI Project Template
 
-A base project setup for running CrewAI locally with Ollama. This template provides a simple starting point for building AI agent-based applications using CrewAI.
+A streamlined template for building AI agent crews using CrewAI. This template provides a structured approach to defining and implementing your AI agents, tasks, and workflows.
 
-## Requirements
-
-- Python 3.x
-- [Ollama](https://ollama.ai/) installed and running locally (or accessible via URL)
-
-## Installation
+## Quick Start
 
 1. Clone this repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Install dependencies: `pip install -r requirements.txt`
+3. Copy `.env.example` to `.env` and configure your settings
+4. Follow the setup worksheet to plan your implementation
+5. Run the example: `python main.py`
 
-## Configuration
+## Project Planning
 
-### Environment Setup
+This template includes a comprehensive setup worksheet (`setup.md`) that guides you through planning and implementing your CrewAI project:
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+1. **Project Overview**: Define your goals and constraints
+2. **Agent Setup**: Design your AI agents and their roles
+3. **Task Definition**: Specify what your agents will do
+4. **Tool Integration**: Configure APIs and custom tools
+5. **Process Flow**: Plan how everything works together
+6. **Implementation**: Step-by-step setup guide
+7. **Validation**: Ensure everything works correctly
 
-2. Configure your environment:
-   ```env
-   # LLM Provider (Required)
-   LLM_PROVIDER=ollama
+### Using the Setup Worksheet
 
-   # Ollama Configuration
-   OLLAMA_MODEL_NAME=llama3.1
-   OLLAMA_BASE_URL=http://localhost:11434
+The `setup.md` worksheet helps you:
+- Plan your entire project before coding
+- Map your plan directly to configuration files
+- Ensure all components are properly defined
+- Follow CrewAI best practices
 
-   # OpenAI Configuration (if using OpenAI)
-   OPENAI_API_KEY=your-api-key-here
-   OPENAI_MODEL_NAME=gpt-4o-mini
-   ```
-
-### YAML Configuration
-
-The project uses two YAML files for configuration:
-
-1. `agents.yaml`:
-   ```yaml
-   assistant:
-     role: "AI Assistant"
-     goal: "Demonstrate basic CrewAI functionality with simple responses"
-     backstory: "A friendly AI assistant that helps users understand how CrewAI works by providing simple, clear responses"
-   ```
-
-2. `tasks.yaml`:
-   ```yaml
-   respond:
-     description: "Respond to the user's greeting or basic query"
-     expected_output: "A friendly greeting or simple response demonstrating CrewAI functionality"
-     tools: []  # No tools needed for this basic example
-   ```
+Example workflow:
+1. Fill out each section in `setup.md`
+2. Use the provided examples to create your YAML configs
+3. Copy configurations to the appropriate files
+4. Follow the implementation checklist
+5. Validate your setup
 
 ## Project Structure
 
 ```
-├── .env                # Environment variables (create from .env.example)
-├── .env.example       # Example environment configuration
-├── agents.py          # Agent setup and initialization
-├── agents.yaml        # Agent definitions
-├── crew.py           # Crew and task orchestration
-├── main.py           # Application entry point
-├── requirements.txt   # Project dependencies
-└── tasks.yaml        # Task definitions
+├── .env.example          # Environment variable template
+├── .env                  # Your environment configuration
+├── setup.md             # Project planning worksheet
+├── agents.yaml          # Agent definitions
+├── tasks.yaml           # Task definitions
+├── main.py             # Entry point
+├── agents.py           # Agent initialization
+├── crew.py             # Crew setup and execution
+└── requirements.txt    # Project dependencies
 ```
 
-## Usage
+## Configuration
 
-1. Ensure Ollama is running (if using locally)
-2. Set up your environment as described in Configuration
-3. Run the example:
-   ```bash
-   python main.py
-   ```
+### Environment Variables
 
-The example implements a simple "Hello World" agent that demonstrates basic CrewAI functionality.
+Copy `.env.example` to `.env` and configure:
+```env
+LLM_PROVIDER=ollama          # or openai
+OLLAMA_MODEL_NAME=llama2     # if using Ollama
+OPENAI_API_KEY=             # if using OpenAI
+```
+
+### Agent Configuration
+
+Define your agents in `agents.yaml`:
+```yaml
+primary_agent:
+  role: "Research Assistant"
+  goal: "Analyze market trends"
+  backstory: "Expert in data analysis..."
+  tools: ["web_search", "data_analysis"]
+```
+
+### Task Configuration
+
+Define tasks in `tasks.yaml`:
+```yaml
+market_analysis:
+  description: "Analyze top competitors"
+  expected_output: "Detailed comparison report"
+  agent: "research_assistant"
+```
 
 ## Development
 
-- Environment variables support both Ollama and OpenAI
-- Agent and task configurations are loaded from YAML files
-- Simple, modular structure for easy customization
-- Configuration files are gitignored by default
+1. Plan your project using `setup.md`
+2. Configure your environment
+3. Define agents and tasks
+4. Implement custom tools if needed
+5. Test and validate
 
-## Customization
+## Best Practices
 
-1. Modify agent behaviors in `agents.yaml`
-2. Define new tasks in `tasks.yaml`
-3. Add custom tools to your agents
-4. Extend the base agent class in `agents.py`
-5. Customize crew behavior in `crew.py`
+- Follow the setup worksheet step by step
+- Keep configurations in YAML files
+- Test thoroughly before deployment
+- Document custom tools and functions
+
+## Resources
+
+- [CrewAI Documentation](https://docs.crewai.com/)
+- [Setup Guide](setup.md)
+- [Example Implementations](https://docs.crewai.com/examples/)
