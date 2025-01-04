@@ -1,90 +1,76 @@
-You are an expert in Python, YAML configurations, and AI toolchain integration. Your role is to assist developers working on the CrewAI project, ensuring code quality, maintainability, and robust integration with Ollama.
+You are an expert in Python, YAML configurations, and AI toolchain integration. Your role is to assist developers working on the CrewAI project, ensuring code quality, maintainability, and robust integration with both Ollama and OpenAI.
 
 ## Code Style and Structure
 
 - Write Python code compliant with PEP 8 and optimized for readability and maintainability.
 - Use type hints for all function parameters and return types.
-- Structure the project as:
-  - Core logic in `src/`.
-  - Entry points in the root directory (e.g., `main.py`, `crew.py`).
-  - Configurations in `config/`, stored as YAML (ensure these are gitignored).
-- Avoid duplication by modularizing shared logic (e.g., common utilities, agent setups).
+- Keep a flat project structure with all main files in the root directory.
+- Avoid duplication by using clear, modular code organization.
 
 ## Naming Conventions
 
 - Use snake_case for variables, functions, and filenames.
 - Use PascalCase for class names.
-- Prefix all environment variables with `OLLAMA_` for consistency.
-- Name configuration files descriptively (e.g., `agents.yaml`, `tasks.yaml`).
+- Prefix environment variables with provider name (e.g., `OLLAMA_`, `OPENAI_`).
+- Use descriptive names for configuration files (e.g., `agents.yaml`, `tasks.yaml`).
 
 ## Environment and Configuration
 
-- Use Pydantic’s `BaseSettings` to validate and manage environment variables.
-- Require `.env` files based on `.env.example` as templates for environment setup.
-- Ensure YAML files are structured and validated on load:
-  - Include clear schema definitions or validation logic.
-  - Provide error messages for missing or invalid keys.
+- Use `python-dotenv` to manage environment variables.
+- Maintain `.env.example` as a template for environment setup.
+- Structure YAML files clearly and validate on load:
+  - Use `yaml.safe_load` for security.
+  - Include clear error messages for missing or invalid keys.
 
 ## Syntax and Formatting
 
 - Format code with tools like Black and lint with Flake8.
-- Follow Pythonic idioms, leveraging list comprehensions, unpacking, and context managers.
+- Follow Pythonic idioms and best practices.
 - Use early returns in functions to simplify logic.
-- Write concise and meaningful docstrings for all classes and functions.
+- Write clear docstrings for all classes and functions.
 
 ## Error Handling and Validation
 
-- Handle all input and configuration errors gracefully:
+- Handle configuration errors gracefully:
   - Validate environment variables at startup.
-  - Use `try-except` blocks for runtime errors and log meaningful messages.
-- Log errors using Python’s `logging` module with levels appropriate to their severity.
-- Ensure YAML files are loaded with `yaml.safe_load` to prevent vulnerabilities.
+  - Use try-except blocks with meaningful error messages.
+- Log errors appropriately using Python's `logging` module.
+- Ensure secure loading of configuration files.
 
 ## Integration Guidelines
 
-- Ensure robust interaction with the Ollama API:
-  - Modularize API interactions to enable retries and error handling.
-  - Use dynamic configuration for model and base URL via environment variables.
-- Centralize the initialization of agents, tasks, and crews in `crew.py` for clarity.
-- Extend the `BasicCrew` class for flexibility in adding new agents and tasks.
-
-## Performance Optimization
-
-- Optimize configurations and APIs by leveraging lazy loading where applicable.
-- Profile and identify bottlenecks with `cProfile` for critical workflows.
-- Cache heavy operations or intermediate results where safe and effective.
+- Support both Ollama and OpenAI:
+  - Use environment variables for provider selection.
+  - Configure models and endpoints via environment.
+- Keep agent and task definitions in YAML for clarity.
+- Use the `BasicCrew` class as a foundation for custom implementations.
 
 ## Security
 
-- Never hardcode sensitive data; use environment variables and `.env` files.
-- Sanitize inputs passed to the Ollama API or other external services.
-- Ensure secure file permissions for `config/` and `.env`.
+- Never hardcode sensitive data; use environment variables.
+- Keep API keys and sensitive data in `.env` (gitignored).
+- Sanitize all inputs passed to external services.
 
 ## Documentation
 
-- Ensure `README.md` includes:
-  - Clear setup instructions.
-  - Descriptions of core files and directory structure.
-  - Example configuration for `.env` and YAML files.
-- Add inline documentation for complex logic and all configurations.
-- Provide schema examples for YAML files in comments or separate documentation.
+- Maintain clear and comprehensive README.md:
+  - Installation and setup instructions.
+  - Environment configuration examples.
+  - YAML file examples and structure.
+- Document code with clear inline comments.
+- Keep CHANGELOG.md updated with all changes.
 
-## Tools and Dependencies
+## Dependencies
 
-- Use PyYAML for parsing configurations.
-- Use `python-dotenv` for environment variable management.
-- Keep dependencies in `requirements.txt` up to date and ensure compatibility.
-- Utilize `pydantic-settings` for enhanced environment and configuration management.
+- Keep requirements.txt minimal and focused:
+  - crewai: Core functionality
+  - python-dotenv: Environment management
+  - PyYAML: Configuration parsing
 
-## Internationalization and Accessibility
+## Project Structure
 
-- Support localization for error and log messages where applicable.
-- Ensure configurations can handle multiple locales if required.
-
-### Notes on Changes
-
-- Incorporated structured YAML configurations for agents and tasks.
-- Updated `requirements.txt` for dependency consistency (e.g., pydantic>=2.7.4, ollama==0.4.5).
-- Followed a modular project structure with a clear separation of concerns (e.g., `/src`, `/config`).
-- Added validation for Pydantic settings and YAML files to ensure robust environment setup.
-- Improved `README.md` to reflect current setup instructions and project layout.
+- Root Directory:
+  - Python files: agents.py, crew.py, main.py
+  - Config files: agents.yaml, tasks.yaml
+  - Environment: .env.example, .env (local)
+  - Documentation: README.md, CHANGELOG.md

@@ -26,22 +26,23 @@ A base project setup for running CrewAI locally with Ollama. This template provi
 
 2. Configure your environment:
    ```env
-   # LLM Configuration (Required)
-   OLLAMA_MODEL_NAME=ollama/llama3.3
+   # LLM Provider (Required)
+   LLM_PROVIDER=ollama
+
+   # Ollama Configuration
+   OLLAMA_MODEL_NAME=llama3.1
    OLLAMA_BASE_URL=http://localhost:11434
 
-   # Crew Settings (Optional)
-   CREW_VERBOSE=true          # Enable detailed logging output
-   CREW_MAX_LOOPS=3          # Maximum number of execution loops
-   CREW_CACHE_DIR=./cache    # Directory for caching responses
-   CREW_TIMEOUT=300          # Timeout in seconds for operations
+   # OpenAI Configuration (if using OpenAI)
+   OPENAI_API_KEY=your-api-key-here
+   OPENAI_MODEL_NAME=gpt-4o-mini
    ```
 
 ### YAML Configuration
 
-Create a `config` directory and add your agent and task configurations:
+The project uses two YAML files for configuration:
 
-1. `config/agents.yaml`:
+1. `agents.yaml`:
    ```yaml
    assistant:
      role: "AI Assistant"
@@ -49,7 +50,7 @@ Create a `config` directory and add your agent and task configurations:
      backstory: "A friendly AI assistant that helps users understand how CrewAI works by providing simple, clear responses"
    ```
 
-2. `config/tasks.yaml`:
+2. `tasks.yaml`:
    ```yaml
    respond:
      description: "Respond to the user's greeting or basic query"
@@ -60,30 +61,15 @@ Create a `config` directory and add your agent and task configurations:
 ## Project Structure
 
 ```
-├── config/                 # YAML configurations
-│   ├── agents.yaml        # Agent definitions
-│   └── tasks.yaml         # Task definitions
-├── src/
-│   └── settings.py        # Environment and settings management
-├── .env                   # Environment variables (create from .env.example)
-├── .env.example          # Example environment configuration
-├── agents.py             # Agent setup and initialization
-├── crew.py              # Crew and task orchestration
-├── main.py              # Application entry point
-└── requirements.txt     # Project dependencies
+├── .env                # Environment variables (create from .env.example)
+├── .env.example       # Example environment configuration
+├── agents.py          # Agent setup and initialization
+├── agents.yaml        # Agent definitions
+├── crew.py           # Crew and task orchestration
+├── main.py           # Application entry point
+├── requirements.txt   # Project dependencies
+└── tasks.yaml        # Task definitions
 ```
-
-## Dependencies
-
-Core dependencies (from requirements.txt):
-- crewai
-- langchain
-- ollama
-- langchain-ollama
-- python-dotenv
-- pydantic
-- pydantic-settings
-- PyYAML
 
 ## Usage
 
@@ -98,15 +84,15 @@ The example implements a simple "Hello World" agent that demonstrates basic Crew
 
 ## Development
 
-- Environment variables are managed through Pydantic Settings
+- Environment variables support both Ollama and OpenAI
 - Agent and task configurations are loaded from YAML files
-- The project uses a modular structure for easy expansion
+- Simple, modular structure for easy customization
 - Configuration files are gitignored by default
 
 ## Customization
 
-1. Modify agent behaviors in `config/agents.yaml`
-2. Define new tasks in `config/tasks.yaml`
-3. Add tools to tasks as needed
+1. Modify agent behaviors in `agents.yaml`
+2. Define new tasks in `tasks.yaml`
+3. Add custom tools to your agents
 4. Extend the base agent class in `agents.py`
 5. Customize crew behavior in `crew.py`
