@@ -1,4 +1,0 @@
-respond:
-  description: "Respond to the user's greeting or basic query"
-  expected_output: "A friendly greeting or simple response demonstrating CrewAI functionality"
-  tools: []  # No tools needed for this basic example

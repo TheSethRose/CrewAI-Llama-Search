@@ -20,8 +20,10 @@ eggs/
 *.swp
 *.swo
 .DS_Store
+.git
 
 # Project specific
 cache/
 project.md
 temp-scripts/
+.devcontainer.json

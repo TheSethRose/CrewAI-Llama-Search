@@ -1,62 +1,137 @@
 """
-Agent configuration and initialization module.
-This module implements the agent definitions from setup.md (Section 2: Agent Setup).
+Agent definitions for Llama Search.
 """
 
-from crewai import Agent
+from crewai import Agent, LLM
+from crewai.project import CrewBase, agent
 from dotenv import load_dotenv
 import os
-from crewai import LLM
+import logging
+from tools.search_tools import WebSearchTool
+from tools.scraper_tools import WebScraperTool
+from tools.citation_tools import CitationManagerTool
 
-# Load environment variables from .env (Section 6: Implementation Steps)
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
 load_dotenv()
 
-def get_llm():
-    """
-    Get the configured LLM based on environment settings.
-    References setup.md Section 6: Implementation Steps > Environment Setup.
+# Agent configurations
+AGENT_CONFIGS = {
+    'query_analyzer': {
+        'role': 'Query Analysis Specialist',
+        'goal': 'Break down and analyze search queries to identify key topics and concepts',
+        'backstory': 'Expert in natural language processing and query analysis with years of experience in search optimization'
+    },
+    'search_specialist': {
+        'role': 'Web Search Expert',
+        'goal': 'Find relevant and reliable information from various web sources',
+        'backstory': 'Experienced web researcher with expertise in advanced search techniques and source evaluation'
+    },
+    'content_extractor': {
+        'role': 'Content Extraction Specialist',
+        'goal': 'Extract and process relevant information from web pages',
+        'backstory': 'Expert in web scraping and content processing with strong attention to detail'
+    },
+    'source_validator': {
+        'role': 'Source Validation Expert',
+        'goal': 'Verify the credibility and reliability of information sources',
+        'backstory': 'Experienced fact-checker with expertise in source verification and validation'
+    },
+    'info_synthesizer': {
+        'role': 'Information Synthesis Expert',
+        'goal': 'Combine and structure information into coherent and comprehensive responses',
+        'backstory': 'Skilled information analyst with expertise in organizing and presenting complex data'
+    },
+    'citation_specialist': {
+        'role': 'Citation Management Expert',
+        'goal': 'Manage and format citations for all sources used',
+        'backstory': 'Expert in academic citation standards and reference management'
+    }
+}
 
-    The LLM provider can be either 'ollama' or 'openai', configured in .env:
-    - For Ollama: OLLAMA_MODEL_NAME and OLLAMA_BASE_URL
-    - For OpenAI: OPENAI_MODEL_NAME and OPENAI_API_KEY
-    """
-    provider = os.getenv('LLM_PROVIDER', 'ollama').lower()
-
-    if provider == 'openai':
-        return LLM(
-            provider="openai",
-            model=os.getenv('OPENAI_MODEL_NAME', 'gpt-4o-mini')
-        )
-    else:  # default to ollama
-        return LLM(
-            provider="ollama",
-            model=os.getenv('OLLAMA_MODEL_NAME', 'llama3.1'),
-            base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-        )
-
-class BaseAgent(Agent):
-    """
-    Base agent class that implements the configuration from setup.md.
-    References Section 2: Agent Setup.
-
-    The agent configuration includes:
-    - role: From Role Title in setup.md
-    - goal: From Objective in setup.md
-    - backstory: Combined from Background and Core Functions in setup.md
-    - tools: From Tools Needed in setup.md
-    """
-    def __init__(self, **kwargs):
-        super().__init__(
-            llm=get_llm(),
-            verbose=True,
-            allow_delegation=True,
-            **kwargs
-        )
-
-# Define your first agent based on setup.md Section 2: Agent Setup
-# This configuration should match your agents.yaml file
-assistant = BaseAgent(
-    role="AI Assistant",                    # From Role Title in setup.md
-    goal="Demonstrate basic CrewAI functionality with simple responses",  # From Objective
-    backstory="A friendly AI assistant that helps users understand how CrewAI works by providing simple, clear responses"  # From Background
+# Initialize LLM
+llm = LLM(
+    model=os.getenv('OLLAMA_MODEL_NAME', 'llama2'),
+    base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434'),
+    provider="ollama"
 )
+
+@CrewBase
+class LlamaSearchAgents:
+    @agent
+    def query_analyzer(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['query_analyzer']['role'],
+            goal=AGENT_CONFIGS['query_analyzer']['goal'],
+            backstory=AGENT_CONFIGS['query_analyzer']['backstory'],
+            verbose=True,
+            llm=llm
+        )
+
+    @agent
+    def search_specialist(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['search_specialist']['role'],
+            goal=AGENT_CONFIGS['search_specialist']['goal'],
+            backstory=AGENT_CONFIGS['search_specialist']['backstory'],
+            verbose=True,
+            llm=llm,
+            tools=[WebSearchTool()]
+        )
+
+    @agent
+    def content_extractor(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['content_extractor']['role'],
+            goal=AGENT_CONFIGS['content_extractor']['goal'],
+            backstory=AGENT_CONFIGS['content_extractor']['backstory'],
+            verbose=True,
+            llm=llm,
+            tools=[WebScraperTool()]
+        )
+
+    @agent
+    def source_validator(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['source_validator']['role'],
+            goal=AGENT_CONFIGS['source_validator']['goal'],
+            backstory=AGENT_CONFIGS['source_validator']['backstory'],
+            verbose=True,
+            llm=llm,
+            tools=[WebScraperTool()]
+        )
+
+    @agent
+    def info_synthesizer(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['info_synthesizer']['role'],
+            goal=AGENT_CONFIGS['info_synthesizer']['goal'],
+            backstory=AGENT_CONFIGS['info_synthesizer']['backstory'],
+            verbose=True,
+            llm=llm
+        )
+
+    @agent
+    def citation_specialist(self) -> Agent:
+        return Agent(
+            role=AGENT_CONFIGS['citation_specialist']['role'],
+            goal=AGENT_CONFIGS['citation_specialist']['goal'],
+            backstory=AGENT_CONFIGS['citation_specialist']['backstory'],
+            verbose=True,
+            llm=llm,
+            tools=[CitationManagerTool()]
+        )
+
+# Create instance of agents
+agents = LlamaSearchAgents()
+
+# Export individual agents for backward compatibility
+query_analyzer = agents.query_analyzer()
+search_specialist = agents.search_specialist()
+content_extractor = agents.content_extractor()
+source_validator = agents.source_validator()
+info_synthesizer = agents.info_synthesizer()
+citation_specialist = agents.citation_specialist()

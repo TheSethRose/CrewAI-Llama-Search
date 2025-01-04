@@ -1,35 +1,87 @@
-#!/usr/bin/env python
 """
-Main entry point for the CrewAI project.
-This module implements the execution flow defined in setup.md (Section 5: Process Flow).
+Main entry point for Llama Search using CrewAI.
 """
 
-import warnings
-from crew import BasicCrew
+from crewai import Crew, Task, Agent, LLM
+from interface import SearchInterface
+from dotenv import load_dotenv
+import os
+import logging
 
-# Suppress pysbd warnings
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+logger = logging.getLogger(__name__)
 
-def run():
-    """
-    Run the basic crew template.
-    References setup.md Section 5: Process Flow > Execution Order.
+# Load environment variables
+load_dotenv()
 
-    This function:
-    1. Sets up the input query (defined in Section 3: Task Definition > Input Requirements)
-    2. Initializes the crew (configured in Section 2: Agent Setup)
-    3. Executes the task (defined in Section 3: Task Definition)
-    4. Returns the response (format specified in Section 3: Task Definition > Expected Output)
-    """
-    # Define input query
-    # Format specified in setup.md Section 3: Task Definition > Input Requirements
-    inputs = {
-        'query': 'Hello World! How are you?'  # Basic example query
-    }
+if os.getenv("LLM_PROVIDER") == "ollama":
+    if not os.getenv("OLLAMA_MODEL_NAME"):
+        logger.warning("OLLAMA_MODEL_NAME not set. Using default 'llama3.1'.")
 
-    # Initialize and run the crew
-    # Process flow defined in setup.md Section 5: Process Flow
-    BasicCrew().run(inputs=inputs)
+    if not os.getenv("OLLAMA_BASE_URL"):
+        logger.warning("OLLAMA_BASE_URL not set. Using default 'http://localhost:11434'.")
+
+if os.getenv("LLM_PROVIDER") == "openai":
+    if not os.getenv("OPENAI_API_KEY"):
+        logger.warning("OPENAI_API_KEY not set. Using default 'sk-proj-00000000000000000000000000000000'.")
+
+# Initialize LLM (Llama 3.1)
+llm = LLM(
+    model=os.getenv("OLLAMA_MODEL_NAME", "llama3.1"),
+    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+)
+
+# Define agents
+query_analyzer = Agent(
+    role="Query Analyzer",
+    goal="Break down complex queries into specific, searchable topics.",
+    backstory="Expert in query analysis and search optimization.",
+    verbose=True,
+    llm=llm
+)
+
+info_synthesizer = Agent(
+    role="Information Synthesizer",
+    goal="Combine information into a coherent and comprehensive response.",
+    backstory="Skilled in technical writing and information synthesis.",
+    verbose=True,
+    llm=llm
+)
+
+# Define tasks
+tasks = [
+    Task(
+        description="Analyze a query to extract searchable topics.",
+        expected_output="A list of topics and keywords to search for.",
+        agent=query_analyzer
+    ),
+    Task(
+        description="Synthesize analyzed topics into a comprehensive response.",
+        expected_output="A well-structured answer based on topics.",
+        agent=info_synthesizer
+    )
+]
+
+# Create Crew
+crew = Crew(
+    agents=[query_analyzer, info_synthesizer],
+    tasks=tasks,
+    verbose=True
+)
+
+def process_query(query: str):
+    try:
+        result = crew.kickoff(inputs={"query": query})
+        sources = getattr(crew, "sources", [])
+        return {
+            "answer": result,
+            "sources": sources,
+            "metadata": {"task_sequence": [task.description for task in tasks]},
+        }
+    except Exception as e:
+        return {"answer": f"An error occurred: {str(e)}", "sources": [], "metadata": {}}
+
 
 if __name__ == "__main__":
-    run()
+    # Start the terminal interface
+    interface = SearchInterface()
+    interface.start(process_query)

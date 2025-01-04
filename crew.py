@@ -1,58 +1,55 @@
 """
-Crew and task orchestration module.
-This module implements the crew setup from setup.md (Section 5: Process Flow).
+Crew definition for Llama Search.
 """
 
 from crewai import Crew, Task
-from dotenv import load_dotenv
-import yaml
-from agents import assistant
+import logging
 
-# Load environment variables from .env (Section 6: Implementation Steps)
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-class BasicCrew:
-    """
-    A basic template crew that implements the process flow from setup.md.
-    References Section 5: Process Flow and Section 3: Task Definition.
-
-    The crew configuration includes:
-    - Tasks loaded from tasks.yaml (defined in Section 3)
-    - Agents from agents.py (defined in Section 2)
-    - Process flow defined in Section 5
-    """
-
-    def __init__(self):
-        # Load task configuration from tasks.yaml
-        # References setup.md Section 3: Task Definition
-        with open('tasks.yaml', 'r') as f:
-            self.tasks_config = yaml.safe_load(f)
-
-        # Create task from config
-        # Task configuration maps directly to setup.md Section 3: Task Template
-        self.task = Task(
-            **self.tasks_config['respond'],  # Maps to Task Name in setup.md
-            agent=assistant                  # Maps to Assigned To in setup.md
-        )
-
-        # Create crew with defined process flow
-        # References setup.md Section 5: Process Flow > Execution Order
-        self.crew = Crew(
-            agents=[assistant],  # From Section 2: Agent Setup
-            tasks=[self.task],   # From Section 3: Task Definition
-            verbose=True         # Enables detailed logging
-        )
-
-    def run(self, inputs: dict):
+class LlamaSearchCrew:
+    def __init__(self, agents):
         """
-        Run the crew with the given inputs.
-        References setup.md Section 5: Process Flow > Execution Order.
-
+        Initialize the Crew for query processing.
         Args:
-            inputs (dict): Input data for the crew's tasks
-                         Format defined in Section 3: Task Definition > Input Requirements
-
-        Returns:
-            The crew's output as defined in Section 3: Task Definition > Expected Output
+            agents: A dictionary of initialized agents.
         """
-        return self.crew.kickoff(inputs=inputs)
+        self.agents = agents
+        self.sources = []  # Track sources for each task
+
+        # Define tasks
+        self.tasks = [
+            Task(
+                description="Analyze user query into topics.",
+                expected_output="List of topics for searching.",
+                agent=agents.get("query_analyzer")  # Use .get() to avoid KeyError
+            ),
+            Task(
+                description="Synthesize a final response from topics.",
+                expected_output="A detailed, well-structured answer.",
+                agent=agents.get("info_synthesizer")  # Use .get() to avoid KeyError
+            )
+        ]
+
+        # Initialize Crew
+        self.crew = Crew(agents=list(agents.values()), tasks=self.tasks, verbose=True)
+
+    def process_query(self, query: str):
+        """Run the query through the Crew."""
+        result = self.crew.kickoff(inputs={"query": query})
+        task_metadata = [{"description": task.description, "agent": task.agent.role if task.agent else "None"} for task in self.tasks]
+        self.sources = self.collect_sources(result)
+        return {"result": result, "metadata": task_metadata}
+
+
+    def collect_sources(self, result):
+        """Collect sources from tasks or results."""
+        sources = []
+        for task in self.tasks:
+            if task.agent:
+                role = getattr(task.agent, "role", "Unknown Role")
+                sources.append(role)
+            else:
+                sources.append("No Agent Assigned")
+        logger.debug(f"Collected sources: {sources}")
+        return sources
