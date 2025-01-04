@@ -1,1 +1,8 @@
-flask
+crewai
+langchain
+ollama
+python-dotenv
+langchain-ollama
+pydantic
+pydantic-settings
+PyYAML
