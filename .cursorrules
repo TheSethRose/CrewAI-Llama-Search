@@ -1,76 +1,99 @@
-You are an expert in Python, YAML configurations, and AI toolchain integration. Your role is to assist developers working on the CrewAI project, ensuring code quality, maintainability, and robust integration with both Ollama and OpenAI.
+# CrewAI Project & CursorRules Configuration
+# Ensuring consistent code quality, simplicity, and maintainability
 
-## Code Style and Structure
+# 1. Core Principles
+- Prefer simple, readable code over clever solutions
+- Each function or class has a single responsibility
+- Use type hints consistently
+- Avoid premature optimization
+- Delete unnecessary code and comments
 
-- Write Python code compliant with PEP 8 and optimized for readability and maintainability.
-- Use type hints for all function parameters and return types.
-- Keep a flat project structure with all main files in the root directory.
-- Avoid duplication by using clear, modular code organization.
+# 2. Code Style and Structure
+- Comply with PEP 8
+- Use 4 spaces for indentation
+- Keep a flat project structure if possible
+- Group related code together by feature
+- Maximum line length: 88 (Black default)
+- Write functions with early returns for better readability
+- Keep functions short (< 20 lines) and focused
+- Limit function parameters to 3 or fewer
+- Remove comments that aren’t strictly necessary
 
-## Naming Conventions
+# 3. Naming Conventions
+- snake_case for variables, functions, and filenames
+- PascalCase for class names
+- Prefix environment variables with provider-specific tags:
+  - OLLAMA_ for Ollama-specific variables
+  - OPENAI_ for OpenAI-specific variables
 
-- Use snake_case for variables, functions, and filenames.
-- Use PascalCase for class names.
-- Prefix environment variables with provider name (e.g., `OLLAMA_`, `OPENAI_`).
-- Use descriptive names for configuration files (e.g., `agents.yaml`, `tasks.yaml`).
+# 4. Environment and Configuration
+- Use python-dotenv for environment variables
+- Keep .env.example with default configurations
+- Validate .env at runtime with clear error messages
+- Enforce LiteLLM-specific rules:
+  - OLLAMA_MODEL_NAME must include ollama/
+  - No fallback to something like llama3.1 alone
+- Maintain .env in .gitignore
+- Never hardcode credentials or sensitive data
 
-## Environment and Configuration
+# 5. Dependencies
+- Use standard libraries whenever possible
+- Keep external dependencies minimal
+- Required packages:
+  - crewai
+  - python-dotenv
+  - pytest (for testing)
 
-- Use `python-dotenv` to manage environment variables.
-- Maintain `.env.example` as a template for environment setup.
-- Structure YAML files clearly and validate on load:
-  - Use `yaml.safe_load` for security.
-  - Include clear error messages for missing or invalid keys.
+# 6. Error Handling and Validation
+- Validate environment configs on startup
+- Raise exceptions for invalid/missing LLM_PROVIDER, OLLAMA_MODEL_NAME, OPENAI_MODEL_NAME
+- Use explicit error handling with try-except
+- Log errors at ERROR level
+- Return meaningful error messages
+- Sanitize external inputs
 
-## Syntax and Formatting
+# 7. Integration Guidelines
+- Support Ollama and OpenAI as LLM providers
+  - LLM_PROVIDER determines which is used
+  - Do not modify LLM_PROVIDER logic without authorization
+- Agents and tasks must fetch model/provider from .env
+- Prohibit fallback logic for model names in critical files (e.g., agents.py, main.py)
 
-- Format code with tools like Black and lint with Flake8.
-- Follow Pythonic idioms and best practices.
-- Use early returns in functions to simplify logic.
-- Write clear docstrings for all classes and functions.
+# 8. Syntax and Formatting
+- Auto-format with Black
+- Lint with Flake8
+- Avoid complex one-liners
+- Keep code comprehensible and minimal
 
-## Error Handling and Validation
+# 9. Testing
+- Use pytest for tests
+- Write tests first (TDD) when possible
+- Keep tests independent
+- Test edge cases and error conditions
+- Use meaningful test names
 
-- Handle configuration errors gracefully:
-  - Validate environment variables at startup.
-  - Use try-except blocks with meaningful error messages.
-- Log errors appropriately using Python's `logging` module.
-- Ensure secure loading of configuration files.
+# 10. Security
+- Do not commit API keys or sensitive data
+- Validate all inputs
+- Keep .env in .gitignore
 
-## Integration Guidelines
+# 11. OOP Guidelines
+- Single Responsibility Principle: one class, one purpose
+- Encapsulation: hide internal details
+- Clear constructor initialization
+- Favor composition over inheritance
+- Make dependencies explicit (use dependency injection)
+- Use strong types to define interfaces
+- Keep methods short and focused
 
-- Support both Ollama and OpenAI:
-  - Use environment variables for provider selection.
-  - Configure models and endpoints via environment.
-- Keep agent and task definitions in YAML for clarity.
-- Use the `BasicCrew` class as a foundation for custom implementations.
+# 12. Project Integrity Checks
+- Flag changes to critical files (e.g., main.py, agents.py, crew.py, .env.example)
+- Do not bypass LiteLLM rules or environment variable constraints
 
-## Security
-
-- Never hardcode sensitive data; use environment variables.
-- Keep API keys and sensitive data in `.env` (gitignored).
-- Sanitize all inputs passed to external services.
-
-## Documentation
-
-- Maintain clear and comprehensive README.md:
-  - Installation and setup instructions.
-  - Environment configuration examples.
-  - YAML file examples and structure.
-- Document code with clear inline comments.
-- Keep CHANGELOG.md updated with all changes.
-
-## Dependencies
-
-- Keep requirements.txt minimal and focused:
-  - crewai: Core functionality
-  - python-dotenv: Environment management
-  - PyYAML: Configuration parsing
-
-## Project Structure
-
-- Root Directory:
-  - Python files: agents.py, crew.py, main.py
-  - Config files: agents.yaml, tasks.yaml
-  - Environment: .env.example, .env (local)
-  - Documentation: README.md, CHANGELOG.md
+# 13. Anti-Patterns to Avoid
+- Deep inheritance hierarchies
+- God classes that do too much
+- Unnecessary comments and docstrings
+- Feature envy (excessive usage of other classes’ data)
+- Premature optimization
+- Complex, unreadable one-liners

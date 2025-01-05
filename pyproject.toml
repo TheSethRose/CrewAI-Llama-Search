@@ -10,6 +10,7 @@ packages = [{include = "tools"}]
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.13"
 crewAI = "^0.70"  # Matches the stable version as per the thread
+crewai-tools = "^0.70"
 rich = "^13.5.2"  # For terminal-based UI
 python-dotenv = "^1.0.0"  # For environment variable handling
 trafilatura = "^1.4.0"  # For content scraping

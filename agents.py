@@ -1,137 +1,171 @@
 """
-Agent definitions for Llama Search.
+Agent definitions for the Perplexity-like research assistant.
 """
 
-from crewai import Agent, LLM
-from crewai.project import CrewBase, agent
-from dotenv import load_dotenv
-import os
+from typing import List, Optional, Dict, Union
+from crewai import Agent, LLM, Task
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain.tools import Tool
 import logging
-from tools.search_tools import WebSearchTool
-from tools.scraper_tools import WebScraperTool
-from tools.citation_tools import CitationManagerTool
+import os
+from dotenv import load_dotenv
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Agent configurations
-AGENT_CONFIGS = {
-    'query_analyzer': {
-        'role': 'Query Analysis Specialist',
-        'goal': 'Break down and analyze search queries to identify key topics and concepts',
-        'backstory': 'Expert in natural language processing and query analysis with years of experience in search optimization'
-    },
-    'search_specialist': {
-        'role': 'Web Search Expert',
-        'goal': 'Find relevant and reliable information from various web sources',
-        'backstory': 'Experienced web researcher with expertise in advanced search techniques and source evaluation'
-    },
-    'content_extractor': {
-        'role': 'Content Extraction Specialist',
-        'goal': 'Extract and process relevant information from web pages',
-        'backstory': 'Expert in web scraping and content processing with strong attention to detail'
-    },
-    'source_validator': {
-        'role': 'Source Validation Expert',
-        'goal': 'Verify the credibility and reliability of information sources',
-        'backstory': 'Experienced fact-checker with expertise in source verification and validation'
-    },
-    'info_synthesizer': {
-        'role': 'Information Synthesis Expert',
-        'goal': 'Combine and structure information into coherent and comprehensive responses',
-        'backstory': 'Skilled information analyst with expertise in organizing and presenting complex data'
-    },
-    'citation_specialist': {
-        'role': 'Citation Management Expert',
-        'goal': 'Manage and format citations for all sources used',
-        'backstory': 'Expert in academic citation standards and reference management'
-    }
-}
+__all__ = [
+    'intent_analyzer',
+    'query_planner',
+    'search_agent',
+    'content_evaluator',
+    'synthesis_agent',
+    'search_tool'
+]
 
 # Initialize LLM
-llm = LLM(
-    model=os.getenv('OLLAMA_MODEL_NAME', 'llama2'),
-    base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434'),
-    provider="ollama"
+try:
+    llm_provider = os.getenv("LLM_PROVIDER", "openai")
+    if llm_provider == "ollama":
+        llm = LLM(
+            provider="ollama",
+            model=os.getenv("OLLAMA_MODEL_NAME", "llama2")
+        )
+    elif llm_provider == "openai":
+        llm = LLM(
+            provider="openai",
+            model=os.getenv("OPENAI_MODEL_NAME", "gpt-4"),
+            api_key=os.getenv("OPENAI_API_KEY"),
+            api_base=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+        )
+    else:
+        raise ValueError("LLM_PROVIDER must be 'ollama' or 'openai'")
+
+    logger.info(f"LLM initialized successfully for provider: {llm_provider}")
+except Exception as e:
+    logger.error(f"Failed to initialize LLM: {e}")
+    raise
+
+# Initialize tools
+def web_search(query: str) -> str:
+    """Search the web for information about a specific topic."""
+    try:
+        search = DuckDuckGoSearchRun()
+        result = search.run(query)
+        return result
+    except Exception as e:
+        return f"Error: Search failed - {str(e)}"
+
+# Create tool
+search_tool = Tool(
+    name="web_search",
+    func=web_search,
+    description="Search the web for recent information. Provide a simple text query."
 )
 
-@CrewBase
-class LlamaSearchAgents:
-    @agent
-    def query_analyzer(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['query_analyzer']['role'],
-            goal=AGENT_CONFIGS['query_analyzer']['goal'],
-            backstory=AGENT_CONFIGS['query_analyzer']['backstory'],
-            verbose=True,
-            llm=llm
-        )
+# Define specialized agents
+intent_analyzer = Agent(
+    role='Intent Analysis Specialist',
+    goal='Understand user queries and determine search strategy',
+    backstory="""You are an expert in understanding user intent and information needs.
+    You break down queries to understand exactly what information is needed.
+    You identify key aspects that need to be researched to provide a complete answer.
+    You help formulate effective search strategies.""",
+    tools=[],  # No tools needed for analysis
+    llm=llm,
+    verbose=True
+)
 
-    @agent
-    def search_specialist(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['search_specialist']['role'],
-            goal=AGENT_CONFIGS['search_specialist']['goal'],
-            backstory=AGENT_CONFIGS['search_specialist']['backstory'],
-            verbose=True,
-            llm=llm,
-            tools=[WebSearchTool()]
-        )
+query_planner = Agent(
+    role='Query Planning Specialist',
+    goal='Create effective search queries to gather required information',
+    backstory="""You are an expert in formulating search queries.
+    You take the analyzed intent and create specific queries to gather needed information.
+    You ensure queries are focused and will return relevant results.
+    You prioritize queries to get the most important information first.""",
+    tools=[],  # No tools needed for planning
+    llm=llm,
+    verbose=True
+)
 
-    @agent
-    def content_extractor(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['content_extractor']['role'],
-            goal=AGENT_CONFIGS['content_extractor']['goal'],
-            backstory=AGENT_CONFIGS['content_extractor']['backstory'],
-            verbose=True,
-            llm=llm,
-            tools=[WebScraperTool()]
-        )
+search_agent = Agent(
+    role='Search Specialist',
+    goal='Execute individual search queries and gather results one at a time',
+    backstory="""You are a skilled web researcher who executes searches methodically.
+    For each query you receive, you:
 
-    @agent
-    def source_validator(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['source_validator']['role'],
-            goal=AGENT_CONFIGS['source_validator']['goal'],
-            backstory=AGENT_CONFIGS['source_validator']['backstory'],
-            verbose=True,
-            llm=llm,
-            tools=[WebScraperTool()]
-        )
+    1. Execute ONE search at a time using the web_search tool
+    2. From the results, identify and extract:
+       - Complete URLs
+       - Publication dates
+       - Brief descriptions
+    3. Format the output for that single query as:
+       Query: [the exact query used]
+       Results:
+       1. [URL] - [date if available]
+          [Brief description]
+       2. [URL] - [date if available]
+          [Brief description]
+       (continue for top 5)
 
-    @agent
-    def info_synthesizer(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['info_synthesizer']['role'],
-            goal=AGENT_CONFIGS['info_synthesizer']['goal'],
-            backstory=AGENT_CONFIGS['info_synthesizer']['backstory'],
-            verbose=True,
-            llm=llm
-        )
+    Important: Only execute ONE query at a time. Do not try to batch queries.
+    Wait for each search to complete before moving to the next query.""",
+    tools=[search_tool],
+    llm=llm,
+    verbose=True
+)
 
-    @agent
-    def citation_specialist(self) -> Agent:
-        return Agent(
-            role=AGENT_CONFIGS['citation_specialist']['role'],
-            goal=AGENT_CONFIGS['citation_specialist']['goal'],
-            backstory=AGENT_CONFIGS['citation_specialist']['backstory'],
-            verbose=True,
-            llm=llm,
-            tools=[CitationManagerTool()]
-        )
+content_evaluator = Agent(
+    role='Content Evaluation Specialist',
+    goal='Evaluate and score search results using a systematic scoring rubric',
+    backstory="""You are an expert in evaluating content quality and relevance.
+    For each search result provided, you:
 
-# Create instance of agents
-agents = LlamaSearchAgents()
+    1. First read and analyze the content
+    2. Then score it across four dimensions:
+       - Relevance to query (0-40 points):
+         * Direct answer to query: 30-40
+         * Partial answer: 15-29
+         * Tangentially related: 1-14
+       - Source credibility (0-30 points):
+         * Major news/academic: 25-30
+         * Industry sites: 15-24
+         * Blogs/smaller sites: 1-14
+       - Information freshness (0-20 points):
+         * Within last month: 15-20
+         * Within last year: 8-14
+         * Older: 1-7
+       - Content depth (0-10 points):
+         * Comprehensive: 8-10
+         * Moderate detail: 4-7
+         * Surface level: 1-3
 
-# Export individual agents for backward compatibility
-query_analyzer = agents.query_analyzer()
-search_specialist = agents.search_specialist()
-content_extractor = agents.content_extractor()
-source_validator = agents.source_validator()
-info_synthesizer = agents.info_synthesizer()
-citation_specialist = agents.citation_specialist()
+    3. Calculate total score (sum of all dimensions)
+    4. For each result, you output:
+       URL: [full url]
+       Relevance: [score] - [justification]
+       Credibility: [score] - [justification]
+       Freshness: [score] - [justification]
+       Depth: [score] - [justification]
+       Total Score: [total]/100
+
+    You evaluate one result at a time, and only use tools when needed to verify information.""",
+    tools=[search_tool],  # Needed for fact verification
+    llm=llm,
+    verbose=True
+)
+
+synthesis_agent = Agent(
+    role='Information Synthesis Specialist',
+    goal='Create comprehensive summaries with proper citations',
+    backstory="""You are an expert in synthesizing information and citing sources.
+    You take high-scoring results and create clear, accurate summaries.
+    You use numbered citations [1], [2], etc., and list sources at the end.
+    You ensure all information is properly attributed and verifiable.""",
+    tools=[],  # No tools needed for synthesis
+    llm=llm,
+    verbose=True
+)
+
