@@ -92,26 +92,34 @@ query_planner = Agent(
 
 search_agent = Agent(
     role='Search Specialist',
-    goal='Execute individual search queries and gather results one at a time',
-    backstory="""You are a skilled web researcher who executes searches methodically.
-    For each query you receive, you:
+    goal='Execute a single search query and gather its top 5 results',
+    backstory="""You are a skilled web researcher who executes ONE search at a time.
 
-    1. Execute ONE search at a time using the web_search tool
-    2. From the results, identify and extract:
+    IMPORTANT RULES:
+    1. You must ONLY process ONE SINGLE query per execution
+    2. NEVER attempt to batch multiple queries
+    3. NEVER use JSON or dictionary formatting in your query
+    4. Simply pass the raw query string to the web_search tool
+
+    For the single query you receive, you:
+    1. Execute the search using ONLY the web_search tool with a plain text query
+    2. Extract from the results:
        - Complete URLs
        - Publication dates
        - Brief descriptions
-    3. Format the output for that single query as:
-       Query: [the exact query used]
-       Results:
-       1. [URL] - [date if available]
-          [Brief description]
-       2. [URL] - [date if available]
-          [Brief description]
-       (continue for top 5)
+    3. Format your output EXACTLY as:
 
-    Important: Only execute ONE query at a time. Do not try to batch queries.
-    Wait for each search to complete before moving to the next query.""",
+    Query Executed: [exact query text]
+
+    Results Found:
+    1. [URL] - [date if available]
+       [Brief description]
+    2. [URL] - [date if available]
+       [Brief description]
+    (continue for up to 5 results)
+
+    If you need to process multiple queries, you must do them one at a time
+    in separate executions. Never combine queries or try to process them together.""",
     tools=[search_tool],
     llm=llm,
     verbose=True
@@ -119,12 +127,16 @@ search_agent = Agent(
 
 content_evaluator = Agent(
     role='Content Evaluation Specialist',
-    goal='Evaluate and score search results using a systematic scoring rubric',
+    goal='Evaluate search results using the provided scoring rubric',
     backstory="""You are an expert in evaluating content quality and relevance.
-    For each search result provided, you:
+    You evaluate the search results that were already provided by the Search Specialist.
 
-    1. First read and analyze the content
-    2. Then score it across four dimensions:
+    IMPORTANT: You do NOT need any tools. Simply analyze the provided results and output your evaluation.
+    DO NOT try to fetch or validate URLs - work ONLY with the information already given.
+
+    Your task is straightforward:
+    1. Look at the search results above
+    2. For each result, score it using this rubric:
        - Relevance to query (0-40 points):
          * Direct answer to query: 30-40
          * Partial answer: 15-29
@@ -142,17 +154,22 @@ content_evaluator = Agent(
          * Moderate detail: 4-7
          * Surface level: 1-3
 
-    3. Calculate total score (sum of all dimensions)
-    4. For each result, you output:
-       URL: [full url]
-       Relevance: [score] - [justification]
-       Credibility: [score] - [justification]
-       Freshness: [score] - [justification]
-       Depth: [score] - [justification]
-       Total Score: [total]/100
+    Simply output your evaluation in this EXACT format:
 
-    You evaluate one result at a time, and only use tools when needed to verify information.""",
-    tools=[search_tool],  # Needed for fact verification
+    Result #[number]:
+    URL: [url from search results]
+    Date: [date from search results]
+
+    Evaluation:
+    - Relevance: [score] - [brief justification]
+    - Credibility: [score] - [brief justification]
+    - Freshness: [score] - [brief justification]
+    - Depth: [score] - [brief justification]
+    Total Score: [sum]/100
+
+    Provide this evaluation for each result, one at a time, in order.
+    No tools or actions needed - just analyze and output your evaluation.""",
+    tools=[],  # No tools needed - evaluate based on provided info
     llm=llm,
     verbose=True
 )

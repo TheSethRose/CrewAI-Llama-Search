@@ -64,34 +64,41 @@ def create_tasks(query: str) -> list:
             Each with justification."""
         ),
         Task(
-            description="Execute each search query and collect top 5 results for each",
+            description="Take the FIRST search query from the list above and execute it. Process ONLY ONE query.",
             agent=search_agent,
-            expected_output="""Process each query one at a time.
-            For each individual query, provide:
+            expected_output="""Process only the first query from the list.
+            Format your output exactly as:
 
-            Query: [exact query text]
-            Results:
+            Query Executed: [exact query text]
+
+            Results Found:
             1. [URL] - [date if available]
                [Brief description]
             2. [URL] - [date if available]
                [Brief description]
-            (continue for top 5)
+            (continue for up to 5 results)
 
-            Complete one query fully before moving to the next.
-            Do not try to process multiple queries at once."""
+            IMPORTANT: Only process ONE query. Do not attempt to process multiple queries.
+            Additional queries will be handled in subsequent tasks."""
         ),
         Task(
-            description="Evaluate each search result one at a time. For each result, provide a structured score card:",
+            description="Evaluate the search results provided above. Score each result using the scoring rubric.",
             agent=content_evaluator,
-            expected_output="""Score card format for each result:
-            URL: [full url]
-            Relevance: [0-40] - [justification]
-            Credibility: [0-30] - [justification]
-            Freshness: [0-20] - [justification]
-            Depth: [0-10] - [justification]
+            expected_output="""For each result, provide a score card in this exact format:
+
+            Result #[number]:
+            URL: [url from search results]
+            Date: [date from search results]
+
+            Evaluation:
+            - Relevance: [score] - [brief justification]
+            - Credibility: [score] - [brief justification]
+            - Freshness: [score] - [brief justification]
+            - Depth: [score] - [brief justification]
             Total Score: [sum]/100
 
-            Evaluate one result completely before moving to the next."""
+            Important: Use ONLY the information already provided in the search results.
+            Do not try to fetch or validate URLs."""
         ),
         Task(
             description="Create a comprehensive summary using only results that scored above 70. Use numbered citations [1], [2], etc.",
