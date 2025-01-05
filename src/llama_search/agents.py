@@ -168,6 +168,9 @@ def web_search(query: str) -> str:
         search = DuckDuckGoSearchRun()
         results = search.run(query)
 
+        if not results:
+            return "No results found for the query."
+
         # Format results to include URLs on separate lines
         formatted_results = []
         for i, result in enumerate(results.split('\n\n'), 1):
@@ -182,7 +185,7 @@ def web_search(query: str) -> str:
             else:
                 formatted_results.append(f"[{i}] {result}\n")
 
-        return "\n".join(formatted_results)
+        return "\n".join(formatted_results) if formatted_results else "No valid results found."
     except Exception as e:
         logger.error(f"Search failed: {e}", exc_info=True)
         return f"Error: Search failed - {str(e)}"
