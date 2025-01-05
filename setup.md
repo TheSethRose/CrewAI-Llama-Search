@@ -1,219 +1,138 @@
-# CrewAI Project Configuration Worksheet
+# Llama Search Setup Guide
 
-Plan your CrewAI project step-by-step with this worksheet. Each section helps you define your project's goals, agents, tasks, and tools.
+This guide helps you set up and configure your Llama Search instance.
 
----
+## 1. Environment Setup
 
-# Section 1: Project Overview
-Define your project's main purpose and constraints.
-
-#### The name of your CrewAI project
-Project Name:
-
-#### The main objective your crew will accomplish
-Primary Goal:
-
-#### The specific deliverable or result you expect
-Expected Output:
-
-#### Any time or resource constraints for the project
-Time Constraints:
-
----
-
-# Section 2: Agent Setup
-Agents are your project workers. Start with the **Primary Agent**.
-
-## Primary Agent
-#### The specific role or title of the agent (maps to role: in agents.yaml)
-Role Title (e.g., Research Assistant):
-
-#### The agent's primary objective (maps to goal: in agents.yaml)
-Objective (e.g., Analyze market trends):
-
-#### Key functions this agent will perform (used to craft the backstory: in agents.yaml)
-Core Functions (list 2-3 key tasks):
--
--
-
-#### Rate agent expertise from 1-10 (influences temperature setting in agents.yaml)
-Expertise Rating (1-10):
-
-#### Agent's background and experience (combines with Core Functions for backstory: in agents.yaml)
-Background:
-
-#### List of tools the agent needs access to (becomes tools: list in agents.yaml)
-Tools Needed (e.g., web_search, data_analysis):
-
-This maps to agents.yaml as:
-```yaml
-primary_agent:
-  role: "Research Assistant"              # From Role Title
-  goal: "Analyze market trends"           # From Objective
-  backstory: "Expert in data analysis..." # Combined from Background and Functions
-  tools: ["web_search", "data_analysis"]  # From Tools Needed
-  temperature: 0.7                        # Based on Expertise Rating
+1. Copy the example environment file:
+```bash
+cp .env.example .env
 ```
 
-## Supporting Agents
-Add other agents to assist the primary agent.
+2. Configure your LLM provider in `.env`:
 
-#### The role of this supporting agent
-Role:
-
-#### The specific goal this agent should achieve
-Goal:
-
-#### Key functions this agent will perform
-Key Functions:
--
--
-
-#### Tools required for this agent's tasks
-Tools Needed:
-
-This maps to agents.yaml as:
-```yaml
-supporting_agent:
-  role: ""        # From Role
-  goal: ""        # From Goal
-  backstory: ""   # Generated from Functions
-  tools: []       # From Tools Needed
+For Ollama:
+```env
+LLM_PROVIDER=ollama
+OLLAMA_MODEL_NAME=llama2
+OLLAMA_BASE_URL=http://localhost:11434
 ```
 
----
-
-# Section 3: Task Definition
-Define specific jobs for your agents.
-
-## Input Requirements
-What information or resources each task needs:
-
-#### Name of the task (becomes the YAML key in tasks.yaml)
-Task Name:
-
-#### Which agent performs this task (use agent's YAML key from agents.yaml)
-Assigned To:
-
-#### Clear description of what needs to be done (maps to description: in tasks.yaml)
-Description:
-
-#### What information or resources the task needs (included in description: in tasks.yaml)
-Input Requirements:
-
-#### What the task should produce (maps to expected_output: in tasks.yaml)
-Expected Output:
-
-#### Specific criteria to consider the task complete (included in expected_output: in tasks.yaml)
-Completion Criteria:
-- [ ]
-- [ ]
-
-Example task configuration:
-```yaml
-market_analysis:
-  description: "Analyze top 5 competitors in the market. Required input: List of competitor names."
-  expected_output: "Detailed comparison report including market share analysis, product comparison, and pricing strategy"
-  agent: "research_assistant"
-  tools: ["web_search", "data_analysis"]
+For OpenAI:
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your-api-key-here
+OPENAI_MODEL_NAME=gpt-4
+OPENAI_API_BASE=https://api.openai.com/v1
 ```
 
----
+## 2. Agent Configuration
 
-# Section 4: Tool Integration
-List APIs or custom tools your agents need.
+Agents are defined in `src/llama_search/config/agents.yaml`. Each agent has a specific role in the research process:
 
-## Required APIs
-#### List each API needed
-API Name:
-- Purpose:
-- Access Level:
-- Environment Variable:
+1. Intent Analyzer
+   - Understands user queries
+   - Identifies key research aspects
+   - Determines search strategy
 
-## Custom Functions
-#### List each custom function
-Function Name:
-- Purpose:
-- Input:
-- Output:
-- Location: tools/custom_tools.py
+2. Query Planner
+   - Creates focused search queries
+   - Prioritizes information needs
+   - Ensures comprehensive coverage
 
----
+3. Search Agent
+   - Executes web searches
+   - Extracts relevant information
+   - Formats results consistently
 
-# Section 5: Process Flow
-Outline how tasks and agents work together.
+4. Content Evaluator
+   - Scores search results
+   - Validates sources
+   - Applies quality metrics
 
-## Execution Order
-Define the sequence of operations:
-1.
-2.
-3.
+5. Synthesis Agent
+   - Combines information
+   - Manages citations
+   - Creates final summaries
 
-## Error Management
-Define error handling scenarios:
-Case 1:
-Case 2:
+## 3. Task Configuration
 
-This maps to crew.py as:
-```python
-class BasicCrew:
-    def __init__(self):
-        self.crew = Crew(
-            agents=[],    # From Section 2: Agent Setup
-            tasks=[],     # From Section 3: Task Definition
-            verbose=True
-        )
+Tasks are defined in `src/llama_search/config/tasks.yaml`. The research process follows these steps:
+
+1. Query Analysis
+   - Break down user query
+   - Identify main topics
+   - Determine constraints
+
+2. Search Planning
+   - Create specific queries
+   - Prioritize search order
+   - Plan information gathering
+
+3. Information Retrieval
+   - Execute searches
+   - Extract key details
+   - Format results
+
+4. Content Evaluation
+   - Score results
+   - Validate sources
+   - Filter quality content
+
+5. Information Synthesis
+   - Combine findings
+   - Add citations
+   - Create summary
+
+## 4. Validation Checklist
+
+Before running queries:
+
+### Environment
+- [ ] `.env` file configured
+- [ ] LLM provider accessible
+- [ ] API keys valid (if using OpenAI)
+
+### Configuration
+- [ ] `agents.yaml` syntax valid
+- [ ] `tasks.yaml` syntax valid
+- [ ] Agent roles properly defined
+- [ ] Task flow logical
+
+### Tools
+- [ ] Web search functioning
+- [ ] DuckDuckGo accessible
+- [ ] Error handling working
+
+## 5. Running Tests
+
+When tests are available:
+```bash
+poetry run pytest
 ```
 
----
+## 6. Troubleshooting
 
-# Section 6: Implementation Steps
+Common issues and solutions:
 
-## Environment Setup
-- [ ] Copy .env.example to .env
-- [ ] Configure LLM provider:
-  ```env
-  LLM_PROVIDER=ollama          # or openai
-  OLLAMA_MODEL_NAME=llama2     # if using Ollama
-  OPENAI_API_KEY=             # if using OpenAI
-  ```
+1. LLM Connection
+   - Verify API keys
+   - Check provider status
+   - Confirm model names
 
-## Agent Implementation
-- [ ] Copy agent definitions to agents.yaml
-- [ ] Test each agent's responses
-- [ ] Verify tool access
+2. Web Search
+   - Check internet connection
+   - Verify DuckDuckGo access
+   - Review search limits
 
-## Task Configuration
-- [ ] Copy task definitions to tasks.yaml
-- [ ] Verify task dependencies
-- [ ] Test task outputs
+3. Configuration
+   - Validate YAML syntax
+   - Check file paths
+   - Verify dependencies
 
----
+## Resources
 
-# Section 7: Validation
-
-## Agent Testing
-- [ ] YAML syntax valid
-- [ ] Responses appropriate
-- [ ] Tools accessible
-
-## Task Validation
-- [ ] Dependencies correct
-- [ ] Outputs as expected
-
-## Tool Verification
-- [ ] APIs connected
-- [ ] Functions working
-
-## Environment Check
-- [ ] Variables set
-- [ ] Provider working
-
----
-
-# Notes
-- Keep YAML files up-to-date
-- Test thoroughly before deployment
-- Document custom tools
-- Refer to [CrewAI Documentation](https://docs.crewai.com/) for best practices
+- [CrewAI Documentation](https://docs.crewai.com/)
+- [Ollama Documentation](https://ollama.ai/docs)
+- [OpenAI API Documentation](https://platform.openai.com/docs)
 

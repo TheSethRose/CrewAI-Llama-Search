@@ -1,0 +1,70 @@
+tasks:
+  analyze_intent:
+    description: Analyze the user's query to understand the core information needs
+    agent: intent_analyzer
+    context:
+      - Identify the main topics and subtopics
+      - Determine what type of information is needed
+      - Break down complex queries into searchable components
+      - Identify any constraints or preferences in the query
+    expected_output: |
+      A clear breakdown of:
+      - Main information needs
+      - Key aspects to research
+      - Any specific requirements or constraints
+    dependencies: []
+
+  plan_queries:
+    description: Create effective search queries based on the intent analysis
+    agent: query_planner
+    context:
+      - Create specific, focused search queries
+      - Prioritize queries by importance
+      - Ensure coverage of all identified aspects
+    expected_output: |
+      A list of prioritized search queries that will:
+      - Cover all aspects of the information need
+      - Be specific enough to return relevant results
+      - Be ordered by importance
+    dependencies: ["analyze_intent"]
+
+  execute_search:
+    description: Execute individual search queries and format results
+    agent: search_agent
+    context:
+      - Execute the search
+      - Extract and format the results
+      - Include URLs, dates, and descriptions
+    expected_output: |
+      For each search:
+      - The exact query executed
+      - Up to 5 formatted results with URLs, dates, and descriptions
+    dependencies: ["plan_queries"]
+
+  evaluate_content:
+    description: Score and evaluate search results using the rubric
+    agent: content_evaluator
+    context:
+      - Apply the scoring rubric
+      - Provide justification for each score
+      - Calculate total scores
+    expected_output: |
+      For each result:
+      - Detailed scoring across all rubric categories
+      - Justifications for each score
+      - Total score out of 100
+    dependencies: ["execute_search"]
+
+  synthesize_information:
+    description: Create a comprehensive summary with citations
+    agent: synthesis_agent
+    context:
+      - Synthesize the information
+      - Include proper citations
+      - Ensure comprehensive coverage
+    expected_output: |
+      A clear summary that:
+      - Answers the original query
+      - Uses proper citations
+      - Lists all sources
+    dependencies: ["evaluate_content"]

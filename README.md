@@ -1,14 +1,16 @@
 # Llama Search
 
-A CrewAI-powered research assistant using Llama models, inspired by Perplexity AI.
+A CrewAI-powered research assistant that performs comprehensive web research with source validation and citation management.
 
 ## Features
 
-- Web search and content extraction
-- Source validation and citation management
-- Clean, Perplexity-like terminal interface
+- Intelligent query analysis and planning
+- Web search with source validation
+- Content evaluation and scoring
+- Citation management and synthesis
 - Support for both Ollama and OpenAI models
-- Configurable agent roles and behaviors
+- YAML-based configuration for agents and tasks
+- Interactive query interface
 
 ## Prerequisites
 
@@ -41,8 +43,10 @@ cp .env.example .env
 
 4. Run the application
 ```bash
-poetry run python main.py
+poetry run python -m src.llama_search.main
 ```
+
+The application will prompt you for research queries. Type 'exit' to quit.
 
 ## Configuration
 
@@ -64,21 +68,49 @@ OPENAI_MODEL_NAME=gpt-4
 
 ### Agent Configuration
 
-Agents are defined in `agents.yaml`:
+Agents are defined in `src/llama_search/config/agents.yaml`:
 ```yaml
-query_analyzer:
-  role: "Query Analysis Specialist"
-  goal: "Break down complex queries"
-  backstory: "Expert in search optimization..."
+intent_analyzer:
+  role: Intent Analysis Specialist
+  goal: Understand user queries and determine search strategy
+  backstory: Expert in understanding user intent...
+
+query_planner:
+  role: Query Planning Specialist
+  goal: Create effective search queries
+  backstory: Expert in formulating search strategies...
 ```
 
 ### Task Configuration
 
-Tasks are defined in `tasks.yaml`:
+Tasks are defined in `src/llama_search/config/tasks.yaml`:
 ```yaml
-analyze_query:
-  description: "Break down user query"
-  agent: "query_analyzer"
+analyze_intent:
+  description: Analyze the user's query
+  agent: intent_analyzer
+  context: Break down the query into searchable components...
+
+plan_queries:
+  description: Create search queries
+  agent: query_planner
+  context: Generate focused search queries...
+```
+
+## Project Structure
+
+```
+src/
+└── llama_search/
+    ├── __init__.py
+    ├── agents.py          # Agent initialization and management
+    ├── main.py           # Entry point
+    ├── crew.py           # Crew configuration
+    ├── task_manager.py   # Task management
+    ├── config/
+    │   ├── agents.yaml   # Agent definitions
+    │   └── tasks.yaml    # Task definitions
+    ├── tools/            # Custom tools
+    └── tests/            # Test files
 ```
 
 ## Development
@@ -88,32 +120,15 @@ analyze_query:
 poetry shell
 ```
 
-2. Follow the setup worksheet
+2. Follow the setup guide
 ```bash
 # Review and customize
 cat setup.md
 ```
 
-3. Implement your changes
-4. Run tests (if available)
+3. Run tests (when available)
 ```bash
 poetry run pytest
-```
-
-## Project Structure
-
-```
-├── pyproject.toml       # Poetry configuration
-├── .env                 # Environment variables
-├── agents.yaml         # Agent definitions
-├── tasks.yaml         # Task definitions
-├── main.py           # Entry point
-├── agents.py         # Agent initialization
-├── crew.py           # Crew orchestration
-└── tools/            # Custom tools
-    ├── search_tools.py
-    ├── scraper_tools.py
-    └── citation_tools.py
 ```
 
 ## Contributing
